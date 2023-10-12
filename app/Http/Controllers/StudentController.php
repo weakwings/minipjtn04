@@ -14,7 +14,7 @@ class StudentController extends Controller
     public function index()
     {
         $students = Student::all();
-        return view('student.index', compact('students'));
+        return response()->json($students);
     }
 
     /**
@@ -23,8 +23,7 @@ class StudentController extends Controller
     public function create()
     {
         $courses = Course::all();
-
-        return view('student.create', compact('courses'));
+        return response()->json($courses);
     }
 
     /**
@@ -32,17 +31,31 @@ class StudentController extends Controller
      */
     public function store(Request $request)
     {
-        $student = new Student();
-        $student->name = $request->name;
-        $student->surname = $request->surname;
-        $student->email = $request->email;
-        $student->age = $request->age;
-        $student->city = $request->city;
-        $student->address = $request->address;
-        $student->courses()->sync($request->input('courses'));
-        $student->save();
+        $request->validate([
+            'name' => 'required',
+            'surname' => 'required',
+            'email' => 'required|email',
+            'age' => 'required|integer',
+            'city' => 'required',
+            'address' => 'required',
+            'courses' => 'required|array'
+        ]);
 
-        return redirect('/student');
+        try {
+            $student = new Student();
+            $student->name = $request->name;
+            $student->surname = $request->surname;
+            $student->email = $request->email;
+            $student->age = $request->age;
+            $student->city = $request->city;
+            $student->address = $request->address;
+            $student->courses()->sync($request->input('courses'));
+            $student->save();
+
+            return response()->json($student, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**
@@ -50,7 +63,7 @@ class StudentController extends Controller
      */
     public function show(Student $student)
     {
-        return view('student.show', compact('student'));
+        return response()->json($student);
     }
 
     /**
@@ -59,8 +72,7 @@ class StudentController extends Controller
     public function edit(Student $student)
     {
         $courses = Course::all();
-
-        return view('student.edit', compact('student', 'courses'));
+        return response()->json(['student' => $student, 'courses' => $courses]);
     }
 
     /**
@@ -68,16 +80,30 @@ class StudentController extends Controller
      */
     public function update(Request $request, Student $student)
     {
-        $student->name = $request->name;
-        $student->surname = $request->surname;
-        $student->email = $request->email;
-        $student->age = $request->age;
-        $student->city = $request->city;
-        $student->address = $request->address;
-        $student->courses()->sync($request->input('courses'));
-        $student->save();
+        $request->validate([
+            'name' => 'required',
+            'surname' => 'required',
+            'email' => 'required|email',
+            'age' => 'required|integer',
+            'city' => 'required',
+            'address' => 'required',
+            'courses' => 'required|array'
+        ]);
 
-        return redirect('/student');
+        try {
+            $student->name = $request->name;
+            $student->surname = $request->surname;
+            $student->email = $request->email;
+            $student->age = $request->age;
+            $student->city = $request->city;
+            $student->address = $request->address;
+            $student->courses()->sync($request->input('courses'));
+            $student->save();
+
+            return response()->json($student, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**
@@ -85,7 +111,11 @@ class StudentController extends Controller
      */
     public function destroy(Student $student)
     {
-        $student->delete();
-        return redirect('/student');
+        try {
+            $student->delete();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 }

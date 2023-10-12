@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Course;
 use App\Models\Teacher;
 use Illuminate\Http\Request;
 
@@ -13,7 +14,7 @@ class TeacherController extends Controller
     public function index()
     {
         $teachers = Teacher::all();
-        return view('teacher.index', compact('teachers'));
+        return response()->json($teachers);
     }
 
     /**
@@ -21,7 +22,8 @@ class TeacherController extends Controller
      */
     public function create()
     {
-        return view('teacher.create');
+        $courses = Course::all();
+        return response()->json($courses);
     }
 
     /**
@@ -29,16 +31,27 @@ class TeacherController extends Controller
      */
     public function store(Request $request)
     {
-        $teacher = new Teacher;
-        $teacher->name = $request->name;
-        $teacher->surname = $request->surname;
-        $teacher->email = $request->email;
-        $teacher->age = $request->age;
-        $teacher->age = $request->age;
-        $teacher->city = $request->city;
-        $teacher->save();
+        $request->validate([
+            'name' => 'required',
+            'surname' => 'required',
+            'email' => 'required|email',
+            'age' => 'required|integer',
+            'city' => 'required',
+        ]);
 
-        return redirect('/teacher');
+        try {
+            $teacher = new Teacher;
+            $teacher->name = $request->name;
+            $teacher->surname = $request->surname;
+            $teacher->email = $request->email;
+            $teacher->age = $request->age;
+            $teacher->city = $request->city;
+            $teacher->save();
+
+            return response()->json($teacher, 201);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**
@@ -46,7 +59,7 @@ class TeacherController extends Controller
      */
     public function show(Teacher $teacher)
     {
-        return view('teacher.show', compact('teacher'));
+        return response()->json($teacher);
     }
 
     /**
@@ -54,7 +67,7 @@ class TeacherController extends Controller
      */
     public function edit(Teacher $teacher)
     {
-        return view('teacher.edit', compact('teacher'));
+        return response()->json($teacher);
     }
 
     /**
@@ -62,15 +75,26 @@ class TeacherController extends Controller
      */
     public function update(Request $request, Teacher $teacher)
     {
-        $teacher->name = $request->name;
-        $teacher->surname = $request->surname;
-        $teacher->email = $request->email;
-        $teacher->age = $request->age;
-        $teacher->age = $request->age;
-        $teacher->city = $request->city;
-        $teacher->save();
+        $request->validate([
+            'name' => 'required',
+            'surname' => 'required',
+            'email' => 'required|email',
+            'age' => 'required|integer',
+            'city' => 'required',
+        ]);
 
-        return redirect('/teacher');
+        try {
+            $teacher->name = $request->name;
+            $teacher->surname = $request->surname;
+            $teacher->email = $request->email;
+            $teacher->age = $request->age;
+            $teacher->city = $request->city;
+            $teacher->save();
+
+            return response()->json($teacher, 200);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 
     /**
@@ -78,7 +102,11 @@ class TeacherController extends Controller
      */
     public function destroy(Teacher $teacher)
     {
-        $teacher->delete();
-        return redirect('/teacher');
+        try {
+            $teacher->delete();
+            return response()->json(null, 204);
+        } catch (\Exception $e) {
+            return response()->json(['error' => $e->getMessage()], 400);
+        }
     }
 }
